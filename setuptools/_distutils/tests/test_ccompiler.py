@@ -1,12 +1,13 @@
 import os
-import sys
 import platform
-import textwrap
+import sys
 import sysconfig
+import textwrap
+from distutils import ccompiler
 
 import pytest
 
-from distutils import ccompiler
+pytestmark = pytest.mark.usefixtures('suppress_path_mangle')
 
 
 def _make_strs(paths):
@@ -36,7 +37,7 @@ def c_file(tmp_path):
         .lstrip()
         .replace('#headers', headers)
     )
-    c_file.write_text(payload)
+    c_file.write_text(payload, encoding='utf-8')
     return c_file
 
 
@@ -66,15 +67,15 @@ def test_has_function_prototype():
     assert compiler.has_function('exit')
     with pytest.deprecated_call(match='includes is deprecated'):
         # abort() is a valid expression with the <stdlib.h> prototype.
-        assert compiler.has_function('abort', includes=['<stdlib.h>'])
+        assert compiler.has_function('abort', includes=['stdlib.h'])
     with pytest.deprecated_call(match='includes is deprecated'):
         # But exit() is not valid with the actual prototype in scope.
-        assert not compiler.has_function('exit', includes=['<stdlib.h>'])
+        assert not compiler.has_function('exit', includes=['stdlib.h'])
     # And setuptools_does_not_exist is not declared or defined at all.
     assert not compiler.has_function('setuptools_does_not_exist')
     with pytest.deprecated_call(match='includes is deprecated'):
         assert not compiler.has_function(
-            'setuptools_does_not_exist', includes=['<stdio.h>']
+            'setuptools_does_not_exist', includes=['stdio.h']
         )
 
 
